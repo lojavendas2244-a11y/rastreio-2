@@ -1,310 +1,219 @@
-# rastreio-2   <!DOCTYPE html>
-<html lang="pt-br">
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Suas Encomendas</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
+<title>CekPack PRO | Rastreamento & Admin</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
-
-body{
-background:linear-gradient(135deg,#0f172a,#1e293b);
-color:#fff;
-transition:0.4s;
+:root {
+    --bg:#020617; --card:rgba(15,23,42,0.7); --panel:#0f172a;
+    --brand:#fbbf24; --text:#f8fafc; --muted:#94a3b8;
+    --border:rgba(255,255,255,0.08); --ok:#10b981; --danger:#f43f5e;
 }
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Plus Jakarta Sans',sans-serif;}
+body{background:var(--bg);color:var(--text);min-height:100vh;padding:20px;}
+.container{max-width:1200px;margin:0 auto;}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:40px;}
+.logo{font-size:24px;font-weight:800;color:var(--brand);text-decoration:none;}
+.live-dot{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ok);font-weight:600;background: rgba(16,185,129,0.1);padding:6px 12px;border-radius:20px;}
+.dot{width:8px;height:8px;background:var(--ok);border-radius:50%;box-shadow:0 0 10px var(--ok);animation:pulse 2s infinite;}
+@keyframes pulse{0%{opacity:1;}50%{opacity:0.4;}100%{opacity:1;}}
+.hero{text-align:center;padding:40px 0;}
+.hero h1{font-size:clamp(32px,5vw,56px);font-weight:800;margin-bottom:16px;line-height:1.1;}
+.hero p{color:var(--muted);font-size:18px;margin-bottom:40px;}
+.search-box{background: rgba(255,255,255,0.03);backdrop-filter: blur(12px);border:1px solid var(--border);padding:10px;border-radius:24px;display:flex;gap:10px;max-width:600px;margin:0 auto;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);}
+.search-box input{flex:1;background:transparent;border:none;padding:16px 20px;color:white;font-size:16px;outline:none;}
+.search-box button{background:var(--brand);color:#000;border:none;padding:0 32px;border-radius:16px;font-weight:800;cursor:pointer;transition:0.3s;}
+.search-box button:hover{transform:scale(1.02);}
+#error{color:#f87171;display:none;margin-top:24px;font-weight:600;}
+#results{display:none;margin-top:60px;padding-bottom:100px;}
+.grid{display:grid;grid-template-columns:1.3fr 0.7fr;gap:24px;}
+.card{background:var(--card);backdrop-filter:blur(20px);border:1px solid var(--border);padding:32px;border-radius:32px;box-shadow:0 10px 30px rgba(0,0,0,0.2);}
+.res-id{font-size:40px;font-weight:800;color:var(--brand);margin-bottom:30px;}
+.info-item{display:flex;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--border);font-size:15px;}
+.info-item span{color:var(--muted);}
+.info-item strong{color:#fff;}
+#map{height:400px;border-radius:24px;margin-top:24px;border:1px solid var(--border);}
+.step{position:relative;padding-left:32px;margin-bottom:24px;}
+.step::before{content:'';position:absolute;left:0;top:6px;width:12px;height:12px;border-radius:50%;background:var(--brand);box-shadow:0 0 12px var(--brand);}
+.step p{font-weight:700;font-size:15px;}
+.step span{color:var(--muted);font-size:13px;}
 
-.light{
-background:#f1f5f9;
-color:#111;
-}
-
-button{cursor:pointer;border:none}
-
-/* SPLASH */
-#splash{
-position:fixed;
-width:100%;
-height:100vh;
-background:#0f172a;
-display:flex;
-align-items:center;
-justify-content:center;
-flex-direction:column;
-z-index:9999;
-}
-
-#splash h1{
-font-size:28px;
-animation:pulse 1.5s infinite;
-}
-
-@keyframes pulse{
-50%{opacity:0.5}
-}
-
-/* LOGIN */
-.login{
-height:100vh;
-display:flex;
-align-items:center;
-justify-content:center;
-}
-
-.login-box{
-background:rgba(255,255,255,0.05);
-backdrop-filter:blur(15px);
-padding:40px;
-border-radius:20px;
-width:320px;
-text-align:center;
-}
-
-.login-box input{
-width:100%;
-padding:12px;
-margin-bottom:15px;
-border-radius:10px;
-border:none;
-}
-
-.login-box button{
-width:100%;
-padding:12px;
-border-radius:10px;
-background:#22c55e;
-color:#fff;
-font-weight:bold;
-}
-
-/* SISTEMA */
-.container{display:none;padding:20px;animation:fade 0.5s}
-@keyframes fade{from{opacity:0}to{opacity:1}}
-
-.top{
-display:flex;
-justify-content:space-between;
-margin-bottom:15px;
-align-items:center;
-}
-
-.theme-btn{
-background:#3b82f6;
-padding:6px 10px;
-border-radius:8px;
-color:#fff;
-}
-
-.card-grid{
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:10px;
-margin-bottom:15px;
-}
-
-.card{
-background:rgba(255,255,255,0.05);
-padding:15px;
-border-radius:15px;
-text-align:center;
-}
-
-input[type=text]{
-width:100%;
-padding:12px;
-border-radius:10px;
-border:none;
-margin-bottom:10px;
-}
-
-.rastrear{
-width:100%;
-padding:12px;
-border-radius:10px;
-background:#3b82f6;
-color:#fff;
-font-weight:bold;
-}
-
-.progress{
-width:100%;
-height:12px;
-background:#1e293b;
-border-radius:10px;
-overflow:hidden;
-margin:15px 0;
-}
-
-.bar{
-width:0%;
-height:100%;
-background:#f59e0b;
-transition:1s;
-}
-
-.status-box{
-background:rgba(255,255,255,0.05);
-padding:15px;
-border-radius:12px;
-margin-bottom:15px;
-}
-
-#map{
-height:250px;
-border-radius:15px;
-margin-bottom:15px;
-}
-
-.history-item{
-background:rgba(255,255,255,0.05);
-padding:8px;
-border-radius:8px;
-margin-bottom:5px;
-font-size:13px;
-}
+/* PAINEL ADMIN ESCONDIDO */
+.dashboard{display:none;margin-top:60px;grid-template-columns:400px 1fr;gap:32px;}
+.admin-card{background:var(--panel);border:1px solid var(--border);border-radius:24px;padding:32px;box-shadow:0 20px 40px rgba(0,0,0,0.3);}
+.admin-card h2{font-size:20px;margin-bottom:24px;}
+.input-group{margin-bottom:20px;}
+.input-group label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600;}
+.input-group input{width:100%;background: rgba(0,0,0,0.2);border:1px solid var(--border);padding:14px 16px;color:#fff;border-radius:12px;font-size:14px;outline:none;}
+.input-group input:focus{border-color:var(--brand);box-shadow:0 0 0 4px rgba(251,191,36,0.1);}
+.btn{background:var(--brand);color:#000;border:none;padding:16px;width:100%;border-radius:14px;font-weight:800;cursor:pointer;margin-top:10px;}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 20px rgba(251,191,36,0.2);}
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;color:var(--muted);padding:16px;border-bottom:1px solid var(--border);font-size:12px;text-transform:uppercase;}
+td{padding:20px 16px;border-bottom:1px solid var(--border);font-size:14px;}
+.code-tag{background:rgba(251,191,36,0.1);color:var(--brand);padding:4px 8px;border-radius:6px;font-weight:800;font-size:12px;}
+.del-btn{color:var(--danger);font-weight:800;cursor:pointer;background:none;border:none;font-size:12px;}
+#loader{font-size:12px;color:var(--brand);display:none;margin-top:10px;font-weight:600;}
+@media(max-width:950px){.grid,.dashboard{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
 
-<div id="splash">
-<h1>📦 Suas Encomendas</h1>
-<p>Carregando sistema...</p>
+<header class="container">
+<a href="#" class="logo">CekPack <span style="font-weight:400;color:#fff">PRO</span></a>
+<div class="live-dot"><div class="dot"></div> SISTEMA: ATIVO</div>
+</header>
+
+<div class="container">
+<section class="hero">
+<h1>Sua carga, nossa prioridade.</h1>
+<p>Rastreamento global em tempo real com precisão de 99.9%.</p>
+<div class="search-box">
+<input type="text" id="trackInput" placeholder="Código de rastreamento">
+<button onclick="buscar()">Rastrear</button>
 </div>
+<p id="error">Objeto não localizado.</p>
+</section>
 
-<div class="login" id="login" style="display:none;">
-<div class="login-box">
-<h2>Login</h2>
-<input type="text" id="user" placeholder="Usuário">
-<input type="password" placeholder="Senha">
-<button onclick="entrar()">Entrar</button>
-</div>
-</div>
-
-<div class="container" id="sistema">
-
-<div class="top">
-<div id="bemvindo"></div>
-<div>
-<span id="hora"></span>
-<button class="theme-btn" onclick="toggleTheme()">🌙</button>
-</div>
-</div>
-
-<div class="card-grid">
-<div class="card">Em rota<br><b id="rota">0</b></div>
-<div class="card">Em trânsito<br><b id="transito">0</b></div>
-<div class="card">Entregues<br><b id="entregue">0</b></div>
-<div class="card">Total<br><b id="total">0</b></div>
-</div>
-
-<input type="text" id="codigo" placeholder="Digite o código de rastreio">
-<button class="rastrear" onclick="rastrear()">Rastrear</button>
-
-<div class="progress"><div class="bar" id="bar"></div></div>
-
-<div class="status-box" id="status">Digite um código para rastrear.</div>
-
+<section id="results">
+<div class="grid">
+<div class="card">
+<div id="res-id" class="res-id">--</div>
+<div class="info-item"><span>Status</span> <strong id="res-status">--</strong></div>
+<div class="info-item"><span>Localização</span> <strong id="res-local">--</strong></div>
 <div id="map"></div>
+</div>
+<div class="card">
+<h3 style="margin-bottom:30px;font-size:20px;">Rota e Logística</h3>
+<div class="info-item"><span>Origem</span> <strong id="res-from">--</strong></div>
+<div class="info-item"><span>Destino</span> <strong id="res-to">--</strong></div>
+<div class="info-item"><span>Previsão</span> <strong id="res-eta">--</strong></div>
+<div style="margin-top:30px;">
+<div class="step">
+<p id="st-status">Sincronizado</p>
+<span id="st-local">Aguardando servidor</span>
+</div>
+</div>
+</div>
+</div>
+</section>
 
-<h3>Histórico</h3>
-<div id="historico"></div>
-
+<!-- PAINEL ADMIN -->
+<div class="dashboard">
+<div class="admin-card">
+<h2>Nova Atualização</h2>
+<div class="input-group"><label>Código de Rastreio</label><input type="text" id="code" placeholder="Ex: BR100"></div>
+<div class="input-group"><label>Status Atual</label><input type="text" id="status" placeholder="Ex: Saiu para entrega"></div>
+<div class="input-group"><label>Cidade / Localização</label><input type="text" id="local" placeholder="Ex: Curitiba, PR"><div id="loader">● Buscando coordenadas GPS...</div></div>
+<div class="input-group"><label>Previsão de Entrega</label><input type="text" id="eta" placeholder="Ex: Hoje às 18:00"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+<div class="input-group"><label>Origem</label><input type="text" id="origin" placeholder="Cidade"></div>
+<div class="input-group"><label>Destino</label><input type="text" id="destination" placeholder="Cidade"></div>
+</div>
+<button class="btn" onclick="salvar()">PUBLICAR NA REDE</button>
 </div>
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<div class="admin-card" style="padding:0;overflow:hidden;">
+<div style="padding:32px 32px 0 32px;"><h2>Histórico de Operações</h2></div>
+<table>
+<thead><tr><th>Código</th><th>Status</th><th>Localização</th><th>Ação</th></tr></thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+</div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-let map;
+let map, marker;
+const DB_KEY='cekpack_database_final';
 
-setTimeout(()=>{
-document.getElementById("splash").style.display="none";
-document.getElementById("login").style.display="flex";
-},2000);
+function buscar(){
+    const code=document.getElementById('trackInput').value.trim().toUpperCase();
 
-function entrar(){
-const nome=document.getElementById("user").value||"Usuário";
-document.getElementById("bemvindo").innerHTML="Bem-vindo, "+nome;
-document.getElementById("login").style.display="none";
-document.getElementById("sistema").style.display="block";
-atualizarHora();
-setInterval(atualizarHora,1000);
-} condition ? true : false
+    // SE FOR SENHA ADMIN
+    if(code==='ADMIN2233'){
+        document.querySelector('.dashboard').style.display='grid';
+        document.getElementById('error').style.display='none';
+        document.getElementById('results').scrollIntoView({behavior:'smooth'});
+        return;
+    }
 
-function atualizarHora(){
-const agora=new Date();
-document.getElementById("hora").innerHTML=
-agora.toLocaleDateString()+" "+agora.toLocaleTimeString();
+    const db=JSON.parse(localStorage.getItem(DB_KEY))||{};
+    const data=db[code];
+    if(data){
+        document.getElementById('error').style.display='none';
+        document.getElementById('results').style.display='block';
+        document.getElementById('res-id').innerText=data.code;
+        document.getElementById('res-status').innerText=data.status;
+        document.getElementById('res-local').innerText=data.local;
+        document.getElementById('res-from').innerText=data.from;
+        document.getElementById('res-to').innerText=data.to;
+        document.getElementById('res-eta').innerText=data.eta;
+        document.getElementById('st-status').innerText=data.status;
+        document.getElementById('st-local').innerText=data.local;
+
+        const lat=parseFloat(data.lat),lng=parseFloat(data.lng);
+        if(!map){
+            map=L.map('map').setView([lat,lng],13);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'©OpenStreetMap'}).addTo(map);
+            marker=L.marker([lat,lng]).addTo(map).bindPopup(data.local).openPopup();
+        }else{
+            map.setView([lat,lng],13);
+            marker.setLatLng([lat,lng]).setPopupContent(data.local).openPopup();
+            setTimeout(()=>map.invalidateSize(),200);
+        }
+        document.getElementById('results').scrollIntoView({behavior:'smooth'});
+    }else{
+        document.getElementById('error').style.display='block';
+        document.getElementById('results').style.display='none';
+    }
 }
 
-function toggleTheme(){
-document.body.classList.toggle("light");
+async function salvar(){
+    const code=document.getElementById('code').value.trim().toUpperCase();
+    const local=document.getElementById('local').value.trim();
+    const loader=document.getElementById('loader');
+    if(!code||!local)return alert("Código e Localização são obrigatórios.");
+    loader.style.display='block';
+    try{
+        const res=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(local)}`);
+        const data=await res.json();
+        if(data&&data.length>0){
+            const db=JSON.parse(localStorage.getItem(DB_KEY))||{};
+            db[code]={code,status:document.getElementById('status').value||"Processando",local:local,lat:data[0].lat,lng:data[0].lon,from:document.getElementById('origin').value||"N/A",to:document.getElementById('destination').value||"N/A",eta:document.getElementById('eta').value||"Em análise"};
+            localStorage.setItem(DB_KEY,JSON.stringify(db));
+            alert("Sucesso! Código publicado.");
+            listar();
+        }else alert("Cidade não encontrada no mapa. Tente: Nome da Cidade, Estado.");
+    }catch(err){alert("Erro ao conectar com o servidor satelital.");}
+    finally{loader.style.display='none';}
 }
 
-function rastrear(){
-const codigo=document.getElementById("codigo").value.trim();
-if(!codigo)return;
-
-let dados=JSON.parse(localStorage.getItem("dadosSite"));
-if(!dados){
-alert("Configure no painel admin primeiro.");
-return;
+function excluir(code){
+    if(confirm("Confirmar exclusão do código "+code+"?")){
+        const db=JSON.parse(localStorage.getItem(DB_KEY));
+        delete db[code];
+        localStorage.setItem(DB_KEY,JSON.stringify(db));
+        listar();
+    }
 }
 
-document.getElementById("bar").style.width=dados.porcentagem+"%";
-
-const agora=new Date();
-document.getElementById("status").innerHTML=
-"📦 Código: "+codigo+"<br>"+
-"Status: "+dados.status+" ("+dados.porcentagem+"%)<br>"+
-"Local: "+dados.cidade+"<br>"+
-"Atualizado em: "+agora.toLocaleString();
-
-document.getElementById("rota").innerHTML=dados.rota;
-document.getElementById("transito").innerHTML=dados.transito;
-document.getElementById("entregue").innerHTML=dados.entregues;
-document.getElementById("total").innerHTML=
-Number(dados.rota)+Number(dados.transito)+Number(dados.entregues);
-
-iniciarMapa(dados.cidade);
-salvarHistorico(codigo);
+function listar(){
+    const db=JSON.parse(localStorage.getItem(DB_KEY))||{};
+    const tbody=document.getElementById('tbody');
+    tbody.innerHTML=Object.values(db).map(e=>`
+        <tr>
+            <td><span class="code-tag">${e.code}</span></td>
+            <td style="font-weight:700">${e.status}</td>
+            <td style="color:#94a3b8">${e.local}</td>
+            <td><button class="del-btn" onclick="excluir('${e.code}')">REMOVER</button></td>
+        </tr>
+    `).join('');
 }
-
-async function iniciarMapa(cidade){
-if(map){map.remove();}
-try{
-const resposta=await fetch(
-"https://nominatim.openstreetmap.org/search?format=json&q="
-+encodeURIComponent(cidade)
-);
-const dados=await resposta.json();
-if(dados.length===0){alert("Cidade não encontrada");return;}
-const lat=dados[0].lat;
-const lon=dados[0].lon;
-
-map=L.map('map').setView([lat,lon],13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-maxZoom:19
-}).addTo(map);
-
-L.marker([lat,lon])
-.addTo(map)
-.bindPopup("🚚 Objeto em "+cidade)
-.openPopup();
-
-}catch(e){alert("Erro ao carregar mapa");}
-}
-
-function salvarHistorico(codigo){
-const historico=document.getElementById("historico");
-const item=document.createElement("div");
-item.className="history-item";
-item.innerHTML="Código rastreado: "+codigo;
-historico.prepend(item);
-}
+listar();
 </script>
-
 </body>
-</html>
+</html> 
